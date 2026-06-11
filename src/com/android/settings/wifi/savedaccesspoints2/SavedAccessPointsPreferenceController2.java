@@ -17,7 +17,6 @@
 package com.android.settings.wifi.savedaccesspoints2;
 
 import android.content.Context;
-import android.text.TextUtils;
 
 import androidx.annotation.VisibleForTesting;
 import androidx.preference.Preference;
@@ -29,7 +28,9 @@ import com.android.settings.wifi.WifiEntryPreference;
 import com.android.wifitrackerlib.WifiEntry;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Controller that manages a PreferenceGroup, which contains a list of saved access points.
@@ -90,15 +91,20 @@ public class SavedAccessPointsPreferenceController2 extends BasePreferenceContro
      * mPreferenceGroup.removeAll() then mPreferenceGroup.addPreference for mWifiEntries.
      */
     private void updatePreference() {
+        // Build key→entry map once (O(M)) to avoid O(N×M) getKey()/JSON-serialization per pref.
+        // calling WifiEntry.getKey() inside a stream filter per existing preference
+        // caused ANR under scan-result bursts with many saved networks.
+        Map<String, WifiEntry> keyToEntry = new LinkedHashMap<>();
+        for (WifiEntry entry : mWifiEntries) {
+            keyToEntry.put(entry.getKey(), entry);
+        }
+
         // Update WifiEntry to existing preference and find out which WifiEntry was removed by key.
         List<String> removedKeys = new ArrayList<>();
         int preferenceCount = mPreferenceGroup.getPreferenceCount();
         for (int i = 0; i < preferenceCount; i++) {
             WifiEntryPreference pref = (WifiEntryPreference) mPreferenceGroup.getPreference(i);
-            WifiEntry wifiEntry = mWifiEntries.stream()
-                    .filter(entry -> TextUtils.equals(pref.getKey(), entry.getKey()))
-                    .findFirst()
-                    .orElse(null);
+            WifiEntry wifiEntry = keyToEntry.get(pref.getKey());
             if (wifiEntry != null) {
                 pref.setWifiEntry(wifiEntry);
             } else {
@@ -111,10 +117,11 @@ public class SavedAccessPointsPreferenceController2 extends BasePreferenceContro
         }
 
         // Add the Preference of new added WifiEntry.
-        for (WifiEntry wifiEntry : mWifiEntries) {
-            if (mPreferenceGroup.findPreference(wifiEntry.getKey()) == null) {
+        for (String key : keyToEntry.keySet()) {
+            if (mPreferenceGroup.findPreference(key) == null) {
+                WifiEntry wifiEntry = keyToEntry.get(key);
                 WifiEntryPreference preference = new WifiEntryPreference(mContext, wifiEntry);
-                preference.setKey(wifiEntry.getKey());
+                preference.setKey(key);
                 preference.setOnPreferenceClickListener(this);
                 mPreferenceGroup.addPreference(preference);
             }
