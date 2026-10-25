@@ -15590,4 +15590,22 @@
     <!-- Search keywords for Human interface device access setting -->
     <string name="keywords_access_hid">hid, human, access, device</string>
     <!-- Access HID end -->
+
+    <!-- Play Integrity & Spoofing Settings -->
+    <string name="play_integrity_settings_title">Play Integrity &amp; App Cloaking</string>
+    <string name="play_integrity_settings_summary">Self-healing Play Integrity, Keybox attestation, and app cloaking</string>
+    <string name="play_integrity_intro">Advanced hardware-backed attestation engine and automatic fingerprint cloaking. Self-healing background updates ensure all banking, wallet, and government apps continue working permanently with zero maintenance.</string>
+    <string name="play_integrity_status_title">Integrity Verdict</string>
+    <string name="play_integrity_check_title">Test Play Integrity Verdict</string>
+    <string name="play_integrity_check_summary">Check live attestation status against Google CRL servers</string>
+    <string name="play_integrity_keybox_title">Hardware Keybox Status</string>
+    <string name="play_integrity_profile_title">Active Fingerprint Profile</string>
+    <string name="play_integrity_refresh_title">Refresh Fingerprint &amp; Keybox Now</string>
+    <string name="play_integrity_refresh_summary">Fetch latest verified canary fingerprint from Google and clean keybox</string>
+    <string name="play_integrity_reset_title">Reset to Certified Defaults</string>
+    <string name="play_integrity_reset_summary">Restore certified bluejay canary profile and clean banking target list</string>
+    <string name="play_integrity_auto_title">Automatic Self-Healing</string>
+    <string name="play_integrity_auto_summary">Automatically update fingerprints when Google revokes older builds</string>
+    <string name="play_integrity_crl_title">Google CRL Revocation Check</string>
+    <string name="play_integrity_crl_summary">Inspects 1,765+ revoked keys on android.googleapis.com</string>
 </resources>

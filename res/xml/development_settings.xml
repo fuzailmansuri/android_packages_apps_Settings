@@ -50,6 +50,12 @@
             android:fragment="com.android.settings.development.DevelopmentMemtagPage" />
 
         <Preference
+            android:key="development_play_integrity_page"
+            android:title="@string/play_integrity_settings_title"
+            android:summary="@string/play_integrity_settings_summary"
+            android:fragment="com.android.settings.development.PlayIntegrityPage" />
+
+        <Preference
             android:key="local_backup_password"
             android:title="@string/local_backup_password_title"
             android:summary="@string/local_backup_password_summary_none"

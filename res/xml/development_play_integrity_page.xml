@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright (C) 2026 The LineageOS Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:settings="http://schemas.android.com/apk/res-auto"
+    android:title="@string/play_integrity_settings_title">
+
+    <com.android.settingslib.widget.TopIntroPreference
+        android:title="@string/play_integrity_intro"
+        settings:searchable="false"/>
+
+    <PreferenceCategory
+        android:key="integrity_status_category"
+        android:title="@string/play_integrity_status_title">
+
+        <Preference
+            android:key="integrity_verdict_status"
+            android:title="@string/play_integrity_status_title"
+            android:summary="MEETS_STRONG_INTEGRITY | MEETS_DEVICE_INTEGRITY | MEETS_BASIC_INTEGRITY"
+            android:selectable="false" />
+
+        <Preference
+            android:key="integrity_check_now"
+            android:title="@string/play_integrity_check_title"
+            android:summary="@string/play_integrity_check_summary" />
+
+        <Preference
+            android:key="integrity_crl_status"
+            android:title="@string/play_integrity_crl_title"
+            android:summary="@string/play_integrity_crl_summary"
+            android:selectable="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="integrity_hardware_category"
+        android:title="@string/play_integrity_keybox_title">
+
+        <Preference
+            android:key="integrity_keybox_status"
+            android:title="@string/play_integrity_keybox_title"
+            android:summary="Checking..."
+            android:selectable="false" />
+
+        <Preference
+            android:key="integrity_profile_status"
+            android:title="@string/play_integrity_profile_title"
+            android:summary="Checking..."
+            android:selectable="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="integrity_actions_category"
+        android:title="Controls &amp; Self-Healing">
+
+        <SwitchPreferenceCompat
+            android:key="integrity_auto_self_healing"
+            android:title="@string/play_integrity_auto_title"
+            android:summary="@string/play_integrity_auto_summary"
+            android:defaultValue="true" />
+
+        <Preference
+            android:key="integrity_refresh_now"
+            android:title="@string/play_integrity_refresh_title"
+            android:summary="@string/play_integrity_refresh_summary" />
+
+        <Preference
+            android:key="integrity_reset_defaults"
+            android:title="@string/play_integrity_reset_title"
+            android:summary="@string/play_integrity_reset_summary" />
+    </PreferenceCategory>
+
+</PreferenceScreen>
