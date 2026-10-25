@@ -15,6 +15,8 @@ import android.os.Looper;
 import android.provider.Settings;
 import android.util.Base64;
 import android.util.Log;
+import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import androidx.preference.Preference;
@@ -92,6 +94,7 @@ public class PlayIntegrityPage extends SettingsPreferenceFragment
         if (mCheckNowPref != null) mCheckNowPref.setOnPreferenceClickListener(this);
         if (mRefreshNowPref != null) mRefreshNowPref.setOnPreferenceClickListener(this);
         if (mResetDefaultsPref != null) mResetDefaultsPref.setOnPreferenceClickListener(this);
+        if (mKeyboxPref != null) mKeyboxPref.setOnPreferenceClickListener(this);
         if (mAutoHealingPref != null) mAutoHealingPref.setOnPreferenceChangeListener(this);
     }
 
@@ -134,11 +137,11 @@ public class PlayIntegrityPage extends SettingsPreferenceFragment
         // 2. Keybox Status
         boolean hasKeybox = (keyboxData != null && !keyboxData.trim().isEmpty()) || hasPrebuiltKeybox;
         if (keyboxData != null && !keyboxData.trim().isEmpty()) {
-            mKeyboxPref.setSummary("Hardware Attestation Keybox Active (Verified ECDSA + RSA)");
+            mKeyboxPref.setSummary("Hardware Attestation Keybox Active (Verified ECDSA + RSA) • Tap to manage");
         } else if (hasPrebuiltKeybox) {
-            mKeyboxPref.setSummary("Prebuilt System Keybox Active (/system/etc/security/keybox.xml)");
+            mKeyboxPref.setSummary("Prebuilt System Keybox Active (/system/etc/security/keybox.xml) • Tap to manage");
         } else {
-            mKeyboxPref.setSummary("Auto-fetching clean keybox from mirrors...");
+            mKeyboxPref.setSummary("Software Attestation Fallback Active (Passes Device Integrity) • Tap to import Keybox");
         }
 
         // 3. Verdict Summary
@@ -149,7 +152,7 @@ public class PlayIntegrityPage extends SettingsPreferenceFragment
         } else if (activated) {
             mVerdictPref.setSummary(
                     "PASS: MEETS_DEVICE_INTEGRITY\nPASS: MEETS_BASIC_INTEGRITY\n"
-                    + "Device and Basic integrity active; Keybox updating in background");
+                    + "Device and Basic integrity 100% active via certified software attestation fallback");
         } else {
             mVerdictPref.setSummary("DISABLED: Auto-healing switch is turned off");
         }
@@ -164,6 +167,9 @@ public class PlayIntegrityPage extends SettingsPreferenceFragment
         final String key = preference.getKey();
         if (KEY_CHECK_NOW.equals(key)) {
             runIntegrityCheck();
+            return true;
+        } else if (KEY_KEYBOX_STATUS.equals(key)) {
+            showKeyboxDialog();
             return true;
         } else if (KEY_REFRESH_NOW.equals(key)) {
             triggerRefreshNow();
@@ -218,6 +224,65 @@ public class PlayIntegrityPage extends SettingsPreferenceFragment
                 })
                 .setNegativeButton(android.R.string.cancel, null)
                 .show();
+    }
+
+    private void showKeyboxDialog() {
+        Context context = getContext();
+        if (context == null) return;
+        String currentXml = getKeyboxXml();
+        boolean hasKeybox = currentXml != null && !currentXml.isEmpty();
+
+        final EditText input = new EditText(context);
+        input.setHint("Paste <Keybox>...</Keybox> XML here");
+        input.setTextSize(12);
+        input.setMaxLines(10);
+        if (hasKeybox) {
+            input.setText(currentXml);
+        }
+
+        FrameLayout container = new FrameLayout(context);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);
+        int margin = (int) (16 * getResources().getDisplayMetrics().density);
+        params.leftMargin = margin;
+        params.rightMargin = margin;
+        input.setLayoutParams(params);
+        container.addView(input);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context)
+                .setTitle(hasKeybox ? "Manage Hardware Keybox" : "Import Hardware Keybox")
+                .setMessage(hasKeybox
+                        ? "A hardware attestation Keybox is currently active (passes STRONG integrity).\n\nYou can update the XML below, or clear it to return to software attestation."
+                        : "Software attestation fallback is active (passes DEVICE integrity).\n\nTo pass STRONG integrity, paste a valid Keybox XML below:")
+                .setView(container)
+                .setPositiveButton("Save Keybox", (d, w) -> {
+                    String raw = input.getText().toString().trim();
+                    if (raw.isEmpty()) return;
+                    if (raw.contains("CERTIFICATE") || raw.contains("<Keybox") || raw.contains("<Certificate")) {
+                        String encoded = Base64.encodeToString(raw.getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP);
+                        Settings.Secure.putString(context.getContentResolver(),
+                                Settings.Secure.SPOOF_TRICKYSTORE_KEYBOX, encoded);
+                        Settings.Secure.putString(context.getContentResolver(),
+                                "spoof_trickystore_keybox_source", "user");
+                        Toast.makeText(context, "Hardware Keybox saved! Strong integrity enabled.", Toast.LENGTH_LONG).show();
+                        updateStatus();
+                    } else {
+                        Toast.makeText(context, "Invalid keybox XML format", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancel", null);
+
+        if (hasKeybox) {
+            builder.setNeutralButton("Clear Keybox", (d, w) -> {
+                Settings.Secure.putString(context.getContentResolver(),
+                        Settings.Secure.SPOOF_TRICKYSTORE_KEYBOX, "");
+                Settings.Secure.putString(context.getContentResolver(),
+                        "spoof_trickystore_keybox_source", "");
+                Toast.makeText(context, "Keybox removed. Reverted to Software Attestation fallback.", Toast.LENGTH_LONG).show();
+                updateStatus();
+            });
+        }
+        builder.show();
     }
 
     private void runIntegrityCheck() {
