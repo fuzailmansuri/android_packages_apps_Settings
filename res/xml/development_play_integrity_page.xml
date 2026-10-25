@@ -42,8 +42,7 @@
         <Preference
             android:key="integrity_keybox_status"
             android:title="@string/play_integrity_keybox_title"
-            android:summary="Checking..."
-            android:selectable="false" />
+            android:summary="Checking..." />
 
         <Preference
             android:key="integrity_profile_status"
